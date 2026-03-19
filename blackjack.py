@@ -72,7 +72,7 @@ class Game:
             player_balance = int(input(f"Hi {player_name}! Whats's your balance?\n"))
             self.players.append(Player(player_name, player_balance))
 
-    def _distribute_player_cards(self):
+    def _deal_player_cards(self):
         for player in self.players:
             player_card = self.card_shoe.get_card()
             player.receive_card(player_card)
@@ -80,19 +80,37 @@ class Game:
             print(f'{player.name} gets {player_card}')
 
     def _ask_bets(self):
-        for player in self.players:
+        bets = {}
+
+        for player in self.players[:]:
             player_answer = int(input(f'{player.name} place your bet:\n'))
             print(type(player_answer))
             player_bet = player.make_bet(player_answer)
+
             if player_bet == 0:
                 self.players.remove(player)
                 print(f'{player.name} left the table with {player.balance}$')
             else:
+                bets[player.name] = player_bet
                 print(f'{player.name} bets {player_bet}$')
 
+        return bets
+
     def play_round(self):
-        self._ask_bets()
-        self._distribute_player_cards()
+        # Betting
+        bets = self._ask_bets()
+        if len(self.players) == 0:
+            return
+        
+        # Card Dealing
+        dealer_cards = []
+        self._deal_player_cards()
+        dealer_cards.append(self.card_shoe.get_card())
+        self._deal_player_cards()
+
+        # Player Choices
+
+        
 
 
 # Set up game
