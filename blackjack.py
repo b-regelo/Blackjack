@@ -1,10 +1,12 @@
 import random
+import time
 
 
 class Player:
     def __init__(self, name, balance):
         self.name = name
         self.balance = balance
+        self.cards = []
 
     def __repr__(self):
         return f'{self.name}: {self.balance}$'
@@ -24,15 +26,21 @@ class Player:
 
     def check_balance(self):
         return self.balance
+    
+    def receive_card(self, card):
+        self.cards.append(card)
+    
+    def remove_cards(self):
+        self.cards = []
 
 
 class CardShoe:
     suits = {'hearts': '♥', 'diamonds': '♦', 'clubs': '♣', 'spades': '♠'}
     cards = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'T': 10, 'J': 10, 'Q': 10, 'K': 10, 'A': 11}
 
-    def __init__(self, number_of_decks):
-        self.number_of_decks = number_of_decks
-        self.card_shoe = [card + suit for _ in range(number_of_decks)
+    def __init__(self, number_decks):
+        self.number_decks = number_decks
+        self.card_shoe = [card + suit for _ in range(number_decks)
                                       for suit in CardShoe.suits.values()
                                       for card in CardShoe.cards.keys()]
         random.shuffle(self.card_shoe)
@@ -50,6 +58,22 @@ class CardShoe:
         retrieved_card = self.card_shoe.pop(0)
         self.card_shoe.append(retrieved_card)
         return retrieved_card
+
+
+class Game:
+    def __init__(self, number_players, number_decks):
+        self.number_players = number_players
+        self.card_shoe = CardShoe(number_decks)
+        self.players = []
+
+    def create_players(self):
+        for n in range(self.number_players):
+            player_name = input(f"Player {n}, what's your name?\n")
+            player_balance = input(f"Hi {player_name}! Whats's your balance?\n")
+            self.players.append(Player(player_name, player_balance))
+
+    def play_round():
+        pass
 
 
 
