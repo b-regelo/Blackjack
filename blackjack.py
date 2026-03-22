@@ -68,7 +68,7 @@ class Game:
 
     def create_players(self):
         for n in range(self.number_players):
-            player_name = input(f"Player {n}, what's your name?\n")
+            player_name = input(f"Player {n + 1}, what's your name?\n")
             player_balance = int(input(f"Hi {player_name}! Whats's your balance?\n"))
             self.players.append(Player(player_name, player_balance))
 
@@ -84,7 +84,6 @@ class Game:
 
         for player in self.players[:]:
             player_answer = int(input(f'{player.name} place your bet:\n'))
-            print(type(player_answer))
             player_bet = player.make_bet(player_answer)
 
             if player_bet == 0:
@@ -96,38 +95,91 @@ class Game:
 
         return bets
     
-    def _ask_player_choice(self, player):
-        choice = input(f'{player.name} hit or stand?')
+    def _ask_player_choice(self, player, bet):
+        self._present_results(player, bet)
+        if self._is_bust(player.cards):
+            return
+        
+        choice = input(f'{player.name} hit or stand?\n')
         if choice.lower() == 'hit':
-            player.receive_card(self.card_shoe.get_card())
+            card = self.card_shoe.get_card()
+            player.receive_card(card)
+            time.sleep(1)
+            print(f'{player.name} gets {card}')
         elif choice.lower() == 'stand':
             return
-        else: 
-            self._ask_player_choice(player)
+        
+        self._ask_player_choice(player, bet)
 
-    def _calculate_player_points(self, player):
+    def _calculate_points(self, cards):
+        aces = [card for card in cards if card[0] == 'A']
         points = 0
-        for card in player.cards:
+        for card in cards:
             points += self.card_shoe.check_card_value(card)
 
-        if points > 21 and ('A' in [card[0] for card in player.cards]):
+        while len(aces) > 0 and points > 21:
+            aces.pop(0)
             points -= 10
         
         return points
+    
+    def _present_results(self, player, bet):
+        player_name = player.name
+        player_cards = ''
 
-    def _has_blackjack(self, player):
-        if len(player.cards) == 2 and self._calculate_player_points(player) == 21:
+        while len(player_name) < 8:
+            player_name += ' '
+        
+        for card in player.cards:
+            player_cards += card + '|'
+        
+        result_string = f'{player_name}| Bet: {bet}$ | Points: {self._calculate_points(player.cards)} | Cards: {player_cards}'
+        result_string += " BLACKJACK!!!" if self._has_blackjack(player.cards) else ''
+        result_string += " BUST!" if self._is_bust(player.cards) else ''
+        print(result_string)
+
+    def _has_blackjack(self, cards):
+        if len(cards) == 2 and self._calculate_points(cards) == 21:
             return True
         else:
             return False
         
-    def _is_bust(self, player):
-        if self._calculate_player_points(player) > 21:
+    def _is_bust(self, cards):
+        if self._calculate_points(cards) > 21:
             return True
         else:
             return False
+    
+    def _deal_dealer_cards(self, curr_dealer_cards):
+        new_dealer_cards = curr_dealer_cards
 
-    def play_round(self):
+        if len(new_dealer_cards) == 0:
+            dealer_card = self.card_shoe.get_card()
+            new_dealer_cards.append(dealer_card)
+            time.sleep(1)
+            print(f'Dealer gets {dealer_card}')
+            return new_dealer_cards
+
+        while self._calculate_points(new_dealer_cards) < 17:
+            new_card = self.card_shoe.get_card()
+            new_dealer_cards.append(new_card)
+            time.sleep(1)
+            print(f'Dealer gets {new_card}')
+
+        if self._has_blackjack(new_dealer_cards):
+                print('Dealer: BLACKJACK!!!')
+
+        cards_string = ''
+        for card in new_dealer_cards:
+            cards_string += card + '|'
+        result_string = f'Dealer  | Points: {self._calculate_points(new_dealer_cards)} | Cards: {cards_string}'
+        result_string += " BLACKJACK!!!" if self._has_blackjack(new_dealer_cards) else ''
+        result_string += " BUST!" if self._is_bust(new_dealer_cards) else ''
+        print(result_string)    
+        return new_dealer_cards
+            
+
+    def _play_round(self):
         # Betting
         bets = self._ask_bets()
         if len(self.players) == 0:
@@ -137,17 +189,34 @@ class Game:
         dealer_cards = []
         self.card_shoe.shuffle()
         self._deal_player_cards()
-        dealer_cards.append(self.card_shoe.get_card())
+        dealer_cards = self._deal_dealer_cards(dealer_cards)
         self._deal_player_cards()
+        print('-------------------------')
+        for player in self.players:
+            self._present_results(player, bets[player.name])
+        print('-------------------------')
 
         # Player Choices
         for player in self.players:
-            if self._has_blackjack(player):
+            if self._has_blackjack(player.cards):
                 print(f'{player.name}: BLACKJACK!!!')
                 break
-            
-            p
-            self._ask_player_choice(player)
+            self._ask_player_choice(player, bets[player.name])
+            print('-------------------------')
+        
+        dealer_cards = self._deal_dealer_cards(dealer_cards)
+        
+        for player in self.players:
+            player.remove_cards()
+
+    def start_game(self):
+        print("Welcome to Bruno Regelo's BLACKJACK CASINO!!!")
+        self.create_players()
+        print('-------------------------')
+        while len(self.players) > 0:
+            self._play_round() 
+            print('-------------------------')
+        print('Come back again!')
 
 
         
@@ -155,7 +224,6 @@ class Game:
 
 # Set up game
 blackjack_game = Game(1, 6)
-blackjack_game.create_players()
-blackjack_game.play_round()
+blackjack_game.start_game()
 
         
