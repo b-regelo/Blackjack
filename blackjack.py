@@ -49,7 +49,7 @@ class CardShoe:
         return f'{self.number_of_decks} Decks of 52 Cards'
     
     def check_card_value(self, card):
-        return CardShoe.cards[card]
+        return CardShoe.cards[card[0]]
     
     def shuffle(self):
         random.shuffle(self.card_shoe)
@@ -95,6 +95,37 @@ class Game:
                 print(f'{player.name} bets {player_bet}$')
 
         return bets
+    
+    def _ask_player_choice(self, player):
+        choice = input(f'{player.name} hit or stand?')
+        if choice.lower() == 'hit':
+            player.receive_card(self.card_shoe.get_card())
+        elif choice.lower() == 'stand':
+            return
+        else: 
+            self._ask_player_choice(player)
+
+    def _calculate_player_points(self, player):
+        points = 0
+        for card in player.cards:
+            points += self.card_shoe.check_card_value(card)
+
+        if points > 21 and ('A' in [card[0] for card in player.cards]):
+            points -= 10
+        
+        return points
+
+    def _has_blackjack(self, player):
+        if len(player.cards) == 2 and self._calculate_player_points(player) == 21:
+            return True
+        else:
+            return False
+        
+    def _is_bust(self, player):
+        if self._calculate_player_points(player) > 21:
+            return True
+        else:
+            return False
 
     def play_round(self):
         # Betting
@@ -104,11 +135,20 @@ class Game:
         
         # Card Dealing
         dealer_cards = []
+        self.card_shoe.shuffle()
         self._deal_player_cards()
         dealer_cards.append(self.card_shoe.get_card())
         self._deal_player_cards()
 
         # Player Choices
+        for player in self.players:
+            if self._has_blackjack(player):
+                print(f'{player.name}: BLACKJACK!!!')
+                break
+            
+            p
+            self._ask_player_choice(player)
+
 
         
 
